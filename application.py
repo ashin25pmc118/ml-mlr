@@ -10,13 +10,14 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 
-app = Flask(__name__)
+# Changed 'app' to 'application'
+application = Flask(__name__)
 
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+application.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-@app.route('/', methods=['GET', 'POST'])
+@application.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
         
@@ -27,7 +28,7 @@ def index():
                 return render_template('index.html', error_msg='No selected file.', step=1)
             
             try:
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], 'data.csv')
+                filepath = os.path.join(application.config['UPLOAD_FOLDER'], 'data.csv')
                 file.save(filepath)
                 
                 with open(filepath, 'r', encoding='utf-8') as f:
@@ -48,7 +49,7 @@ def index():
         elif 'x_vars' in request.form and 'y_var' in request.form:
             x_vars = request.form.getlist('x_vars') # Gets multiple selected values
             y_var = request.form['y_var']
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], 'data.csv')
+            filepath = os.path.join(application.config['UPLOAD_FOLDER'], 'data.csv')
             
             try:
                 with open(filepath, 'r', encoding='utf-8') as f:
@@ -114,4 +115,4 @@ def index():
     return render_template('index.html', step=1)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    application.run(debug=True, port=5000)
