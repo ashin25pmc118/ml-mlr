@@ -3,32 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SLR Web App</title>
+    <title>MLR Web App</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; text-align: center; background-color: #f4f4f9;}
         .container { background-color: white; max-width: 900px; margin: auto; padding: 30px; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0,0,0,0.1); }
-        .form-group { margin: 20px 0; }
-        select { padding: 10px; font-size: 16px; margin: 0 10px; width: 200px;}
-        button { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;}
+        .form-group { margin: 20px 0; text-align: left; max-width: 500px; margin-left: auto; margin-right: auto; }
+        select { padding: 10px; font-size: 16px; width: 100%; border-radius: 5px; border: 1px solid #ccc; }
+        /* Style for the multiple select box */
+        select[multiple] { height: 120px; }
+        button { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; width: 100%;}
         button:hover { background-color: #0056b3; }
-        .btn-secondary { background-color: #6c757d; margin-top: 20px;}
+        .btn-secondary { background-color: #6c757d; margin-top: 20px; width: auto;}
         .btn-secondary:hover { background-color: #5a6268; }
         .error { color: red; font-weight: bold; }
         .results { margin-top: 30px; }
         img { max-width: 100%; height: auto; border: 1px solid #ccc; margin-top: 20px; border-radius: 5px;}
-        
-        /* New Table Styles */
         .table-container { overflow-x: auto; margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; }
         th, td { border-bottom: 1px solid #ddd; padding: 10px; }
         th { background-color: #007bff; color: white; }
         tr:nth-child(even) { background-color: #f2f2f2; }
+        .hint { font-size: 12px; color: #666; margin-top: 5px; display: block; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Custom Linear Regression Analyzer</h1>
+    <h1>Multiple Linear Regression Analyzer</h1>
     
     {% if error_msg %}
         <p class="error">{{ error_msg }}</p>
@@ -46,7 +47,7 @@
 
     {% if step == 2 %}
         <h3 style="color: #28a745;">File uploaded successfully!</h3>
-        <p>Here is a preview of the first 10 rows of your dataset:</p>
+        <p>Preview of the first 10 rows:</p>
         
         <div class="table-container">
             <table>
@@ -69,15 +70,16 @@
             </table>
         </div>
 
-        <p>Now, select the columns you want to analyze.</p>
+        <p>Select your variables for the Multiple Regression model.</p>
         <form method="POST">
             <div class="form-group">
-                <label for="x_var"><strong>Independent Variable (X):</strong></label>
-                <select name="x_var" id="x_var" required>
+                <label for="x_vars"><strong>Independent Variables (X):</strong></label>
+                <select name="x_vars" id="x_vars" multiple required>
                     {% for header in headers %}
                         <option value="{{ header }}">{{ header }}</option>
                     {% endfor %}
                 </select>
+                <span class="hint">Hold <strong>Ctrl</strong> (Windows) or <strong>Command</strong> (Mac) to select multiple columns.</span>
             </div>
             
             <div class="form-group">
@@ -89,7 +91,9 @@
                 </select>
             </div>
             
-            <button type="submit">Generate Regression Model</button>
+            <div class="form-group">
+                <button type="submit">Generate MLR Model</button>
+            </div>
         </form>
     {% endif %}
 
@@ -98,8 +102,19 @@
             <h2>Analysis Results</h2>
             <p><strong>Model Accuracy (R² Score):</strong> {{ accuracy }}%</p>
             
+            <div style="text-align: left; background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                <p><strong>Intercept:</strong> {{ intercept }}</p>
+                <strong>Coefficients:</strong>
+                <ul>
+                    {% for var, val in coefs.items() %}
+                        <li>{{ var }}: {{ val }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
             {% if plot_url %}
-                <img src="data:image/png;base64,{{ plot_url }}" alt="Scatter Plot with Regression Line">
+                <h3>Predicted vs. Actual Values</h3>
+                <img src="data:image/png;base64,{{ plot_url }}" alt="MLR Results Plot">
             {% endif %}
             
             <br>
