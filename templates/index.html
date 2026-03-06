@@ -9,13 +9,16 @@
         .container { background-color: white; max-width: 900px; margin: auto; padding: 30px; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0,0,0,0.1); }
         .form-group { margin: 20px 0; text-align: left; max-width: 500px; margin-left: auto; margin-right: auto; }
         select { padding: 10px; font-size: 16px; width: 100%; border-radius: 5px; border: 1px solid #ccc; }
-        /* Style for the multiple select box */
         select[multiple] { height: 120px; }
+        input[type="number"] { padding: 10px; font-size: 16px; width: 100%; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; }
         button { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; width: 100%;}
         button:hover { background-color: #0056b3; }
         .btn-secondary { background-color: #6c757d; margin-top: 20px; width: auto;}
         .btn-secondary:hover { background-color: #5a6268; }
+        .btn-success { background-color: #28a745; }
+        .btn-success:hover { background-color: #218838; }
         .error { color: red; font-weight: bold; }
+        .success { color: #28a745; font-weight: bold; }
         .results { margin-top: 30px; }
         img { max-width: 100%; height: auto; border: 1px solid #ccc; margin-top: 20px; border-radius: 5px;}
         .table-container { overflow-x: auto; margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; }
@@ -24,6 +27,8 @@
         th { background-color: #007bff; color: white; }
         tr:nth-child(even) { background-color: #f2f2f2; }
         .hint { font-size: 12px; color: #666; margin-top: 5px; display: block; }
+        .prediction-box { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 20px; border-radius: 5px; margin: 20px 0; font-size: 24px; font-weight: bold; }
+        .input-summary { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; text-align: left; }
     </style>
 </head>
 <body>
@@ -103,11 +108,11 @@
             <p><strong>Model Accuracy (R² Score):</strong> {{ accuracy }}%</p>
             
             <div style="text-align: left; background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-                <p><strong>Intercept:</strong> {{ intercept }}</p>
-                <strong>Coefficients:</strong>
+                <p><strong>Intercept (β₀):</strong> {{ intercept }}</p>
+                <p><strong>Coefficients (β₁, β₂, ...):</strong></p>
                 <ul>
                     {% for var, val in coefs.items() %}
-                        <li>{{ var }}: {{ val }}</li>
+                        <li><strong>{{ var }}:</strong> {{ val }}</li>
                     {% endfor %}
                 </ul>
             </div>
@@ -117,8 +122,58 @@
                 <img src="data:image/png;base64,{{ plot_url }}" alt="MLR Results Plot">
             {% endif %}
             
+            <h3 style="margin-top: 40px;">Make a Prediction</h3>
+            <p>Enter values for the independent variables to predict {{ y_var }}:</p>
+            
+            <form method="POST">
+                <!-- Hidden fields to store model parameters -->
+                <input type="hidden" name="intercept" value="{{ intercept }}">
+                <input type="hidden" name="y_var_name" value="{{ y_var }}">
+                
+                {% for var in x_vars %}
+                    <input type="hidden" name="x_var_names" value="{{ var }}">
+                    <input type="hidden" name="coef_{{ var }}" value="{{ coefs[var] }}">
+                {% endfor %}
+                
+                {% for var in x_vars %}
+                    <div class="form-group">
+                        <label for="val_{{ var }}"><strong>{{ var }}:</strong></label>
+                        <input type="number" step="any" name="val_{{ var }}" id="val_{{ var }}" required placeholder="Enter value for {{ var }}">
+                    </div>
+                {% endfor %}
+                
+                <div class="form-group">
+                    <button type="submit" name="predict_values" value="1" class="btn-success">Calculate Prediction</button>
+                </div>
+            </form>
+            
             <br>
             <a href="/"><button class="btn-secondary">Start Over with New File</button></a>
+        </div>
+    {% endif %}
+
+    {% if step == 4 %}
+        <div class="results">
+            <h2>Prediction Result</h2>
+            
+            <div class="prediction-box">
+                Predicted {{ y_var }} = {{ prediction }}
+            </div>
+            
+            <div class="input-summary">
+                <h3>Input Values:</h3>
+                <ul>
+                    {% for var, val in input_data.items() %}
+                        <li><strong>{{ var }}:</strong> {{ val }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <div style="margin-top: 30px;">
+                <form method="GET" action="/">
+                    <button type="submit" class="btn-secondary">Start New Analysis</button>
+                </form>
+            </div>
         </div>
     {% endif %}
 </div>

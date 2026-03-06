@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 
-# Changed 'app' to 'application'
 application = Flask(__name__)
 
 UPLOAD_FOLDER = 'uploads'
@@ -47,7 +46,7 @@ def index():
 
         # STEP 2: Process Multiple Variables (MLR)
         elif 'x_vars' in request.form and 'y_var' in request.form:
-            x_vars = request.form.getlist('x_vars') # Gets multiple selected values
+            x_vars = request.form.getlist('x_vars')
             y_var = request.form['y_var']
             filepath = os.path.join(application.config['UPLOAD_FOLDER'], 'data.csv')
             
@@ -64,7 +63,6 @@ def index():
                     
                     for row in csv_reader:
                         try:
-                            # Extract multiple X values for the current row
                             x_row = [float(row[i].strip()) for i in x_indices]
                             y_val = float(row[y_idx].strip())
                             x_data.append(x_row)
@@ -91,7 +89,6 @@ def index():
                 # Generate "Actual vs Predicted" Plot
                 plt.figure(figsize=(8, 6))
                 plt.scatter(y, y_pred, color='teal', alpha=0.6, label='Data points')
-                # Ideal prediction line (y=x)
                 plt.plot([y.min(), y.max()], [y.min(), y.max()], 'r--', lw=2, label='Perfect Fit')
                 
                 plt.xlabel(f'Actual {y_var}')
@@ -107,10 +104,40 @@ def index():
                 plt.close()
                 
                 return render_template('index.html', plot_url=plot_url, accuracy=accuracy, 
-                                       coefs=coef_map, intercept=intercept, step=3)
+                                       coefs=coef_map, intercept=intercept, 
+                                       x_vars=x_vars, y_var=y_var, step=3)
                 
             except Exception as e:
                 return render_template('index.html', error_msg=f"Analysis error: {e}", step=1)
+
+        # STEP 3: Manual Prediction Input
+        elif 'predict_values' in request.form:
+            try:
+                # Retrieve the values entered by the user
+                x_vars = request.form.getlist('x_var_names')
+                input_values = [float(request.form.get(f"val_{var}")) for var in x_vars]
+                intercept = float(request.form.get('intercept'))
+                coefs = [float(request.form.get(f"coef_{var}")) for var in x_vars]
+                y_var_name = request.form.get('y_var_name')
+
+                # Calculate Prediction: Y = Intercept + (X1*C1 + X2*C2 + ...)
+                prediction = intercept
+                for val, coef in zip(input_values, coefs):
+                    prediction += val * coef
+                
+                prediction = round(prediction, 4)
+
+                # Create input data dictionary for display
+                input_data = {}
+                for var, val in zip(x_vars, input_values):
+                    input_data[var] = val
+
+                # Send back to results page with the prediction result
+                return render_template('index.html', prediction=prediction, 
+                                       input_data=input_data,
+                                       y_var=y_var_name, step=4)
+            except Exception as e:
+                return render_template('index.html', error_msg=f"Prediction error: {e}", step=1)
 
     return render_template('index.html', step=1)
 
